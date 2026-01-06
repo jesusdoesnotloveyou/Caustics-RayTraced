@@ -72,7 +72,7 @@ Caustics::PhotonTraceShader Caustics::getPhotonTraceShader()
     if (pIter == mPhotonTraceShaderList.end())
     {
         ProgramDesc rtProgDesc;
-        rtProgDesc.addShaderLibrary("PhotonTrace.rt.hlsl");
+        rtProgDesc.addShaderLibrary("Samples/Caustics/PhotonTrace.rt.hlsl");
         rtProgDesc.addRayGen("rayGen");
         rtProgDesc.addHitGroup("primaryClosestHit");
         rtProgDesc.addMiss("primaryMiss");
@@ -128,6 +128,7 @@ Caustics::PhotonTraceShader Caustics::getPhotonTraceShader()
         {
             rtProgDefineList.add("UPDATE_PHOTON", "1");
         }
+        rtProgDefineList.add(mpScene->getSceneDefines());
 
         uint payLoadSize = 80U;
         if (mShrinkColorPayload) payLoadSize -= 12U;
@@ -136,14 +137,16 @@ Caustics::PhotonTraceShader Caustics::getPhotonTraceShader()
         rtProgDesc.maxPayloadSize = payLoadSize;
         rtProgDesc.maxTraceRecursionDepth = 1u;
 
-        rtStateObjectDesc.maxTraceRecursionDepth = 1u;
-
-        //auto pPhotonTraceProgram = Program::create(getDevice(), rtProgDesc, payLoadSize, 8U);
-        auto pPhotonTraceProgram = Program::create(getDevice(), rtProgDesc, rtProgDefineList);
-        auto pPhotonTraceState = getDevice()->createRtStateObject(rtStateObjectDesc);
-        //pPhotonTraceState->setProgram(pPhotonTraceProgram);
-
+        auto pPhotonTraceProgram = Program::create(getDevice(), rtProgDesc, rtProgDefineList); //auto pPhotonTraceProgram = Program::create(getDevice(), rtProgDesc, payLoadSize, 8U);
         auto pPhotonTraceVars = RtProgramVars::create(getDevice(), pPhotonTraceProgram, pSBT);
+
+        auto pProgramVersion = pPhotonTraceProgram->getActiveVersion();
+
+        rtStateObjectDesc.maxTraceRecursionDepth = 1u;
+        rtStateObjectDesc.pProgramKernels = pProgramVersion->getKernels(getDevice().get(), pPhotonTraceVars.get());
+
+        auto pPhotonTraceState = getDevice()->createRtStateObject(rtStateObjectDesc);
+
         mPhotonTraceShaderList[flag] = {pPhotonTraceProgram, pPhotonTraceVars, pPhotonTraceState};
     }
     return mPhotonTraceShaderList[flag];
@@ -661,23 +664,30 @@ void Caustics::loadScene(const std::string& filename, const Fbo* pTargetFbo)
 
 void Caustics::loadShader()
 {
+    // Get shader modules and type conformances for types used by the scene.
+    // These need to be set on the program in order to fully use Falcor's material system.
+    auto shaderModules = mpScene->getShaderModules();
+    auto typeConformances = mpScene->getTypeConformances();
+    // Get scene defines. These need to be set on any program using the scene.
+    auto sceneDefines = mpScene->getSceneDefines();
     // raytrace
     {
-        // RtProgram
-        ref<RtBindingTable> pSBT = RtBindingTable::create(2, 2, mpScene->getGeometryCount());
         ProgramDesc rtProgDesc;
-        rtProgDesc.setMaxTraceRecursionDepth(3);
-        rtProgDesc.setMaxPayloadSize(24);
+        rtProgDesc.addShaderModules(shaderModules);
         rtProgDesc.addShaderLibrary("Samples/Caustics/Caustics.rt.hlsl");
+        rtProgDesc.setMaxTraceRecursionDepth(3u);
+        rtProgDesc.addTypeConformances(typeConformances);
+        rtProgDesc.setMaxPayloadSize(24u);
+
+        ref<RtBindingTable> pSBT = RtBindingTable::create(2u, 2u, mpScene->getGeometryCount());
         pSBT->setRayGen(rtProgDesc.addRayGen("rayGen"));
         pSBT->setMiss(0, rtProgDesc.addMiss("primaryMiss"));
         pSBT->setMiss(1, rtProgDesc.addMiss("shadowMiss"));
         pSBT->setHitGroup(0, mpScene->getGeometryIDs(Scene::GeometryType::TriangleMesh), rtProgDesc.addHitGroup("primaryClosestHit", ""));
         pSBT->setHitGroup(1, mpScene->getGeometryIDs(Scene::GeometryType::TriangleMesh), rtProgDesc.addHitGroup("", "shadowAnyHit"));
-        mpRaytraceProgram = Program::create(getDevice(), rtProgDesc, mpScene->getSceneDefines());
-        // mpRtState = RtState::create();
-        // mpRtState->setProgram(mpRaytraceProgram);
-        // mpRtState->setMaxTraceRecursionDepth(3);
+
+        // RtProgram
+        mpRaytraceProgram = Program::create(getDevice(), rtProgDesc, sceneDefines);
         mpRtVars = RtProgramVars::create(getDevice(), mpRaytraceProgram, pSBT);
     }
 
@@ -693,23 +703,24 @@ void Caustics::loadShader()
 
     // composite rt
     {
-        ref<RtBindingTable> pSBT = RtBindingTable::create(2, 2, mpScene->getGeometryCount());
-        ProgramDesc desc;
-        desc.addShaderLibrary("Samples/Caustics/CompositeRT.rt.hlsl");
-        pSBT->setRayGen(desc.addRayGen("rayGen"));
+        ref<RtBindingTable> pSBT = RtBindingTable::create(2u, 2u, mpScene->getGeometryCount());
+        ProgramDesc rtProgDesc;
+        rtProgDesc.addShaderModules(shaderModules);
+        rtProgDesc.addShaderLibrary("Samples/Caustics/CompositeRT.rt.hlsl");
+        rtProgDesc.setMaxTraceRecursionDepth(3u);
+        rtProgDesc.addTypeConformances(typeConformances);
+        rtProgDesc.setMaxPayloadSize(48u);
+
+        pSBT->setRayGen(rtProgDesc.addRayGen("rayGen"));
         // desc.addHitGroup(0, "primaryClosestHit", "");
         // desc.addHitGroup(1, "", "shadowAnyHit").addMiss(1, "shadowMiss");
-        pSBT->setHitGroup(0, mpScene->getGeometryIDs(Scene::GeometryType::TriangleMesh), desc.addHitGroup("primaryClosestHit", ""));
-        pSBT->setHitGroup(1, mpScene->getGeometryIDs(Scene::GeometryType::TriangleMesh), desc.addHitGroup("", "shadowAnyHit"));
+        pSBT->setHitGroup(0, mpScene->getGeometryIDs(Scene::GeometryType::TriangleMesh), rtProgDesc.addHitGroup("primaryClosestHit", ""));
+        pSBT->setHitGroup(1, mpScene->getGeometryIDs(Scene::GeometryType::TriangleMesh), rtProgDesc.addHitGroup("", "shadowAnyHit"));
         // desc.addMiss(0, "primaryMiss");
         // desc.addMiss(1, "shadowMiss");
-        pSBT->setMiss(0, desc.addMiss("primaryMiss"));
-        pSBT->setMiss(1, desc.addMiss("shadowMiss"));
-        desc.setMaxPayloadSize(48);
-        desc.setMaxTraceRecursionDepth(3);
-        mpCompositeRTProgram = Program::create(getDevice(), desc, mpScene->getSceneDefines());
-        // mpCompositeRTState = RtState::create();
-        // mpCompositeRTState->setProgram(mpCompositeRTProgram);
+        pSBT->setMiss(0, rtProgDesc.addMiss("primaryMiss"));
+        pSBT->setMiss(1, rtProgDesc.addMiss("shadowMiss"));
+        mpCompositeRTProgram = Program::create(getDevice(), rtProgDesc, sceneDefines);
         mpCompositeRTVars = RtProgramVars::create(getDevice(), mpCompositeRTProgram, pSBT);
     }
 
@@ -808,24 +819,19 @@ void Caustics::loadShader()
     mpSpacialFilterState->setProgram(mpSpacialFilterProgram);
     mpSpacialFilterVars = ProgramVars::create(getDevice(), mpSpacialFilterProgram.get());
 
-    // mpRtRenderer = RtSceneRenderer::create(mpScene);
-
-    // Get type conformances for types used by the scene.
-    // These need to be set on the program in order to fully use Falcor's material system.
-    auto typeConformances = mpScene->getTypeConformances();
-    auto sceneDefine = mpScene->getSceneDefines();
-
     // should be created another way – look to the sample projects
     mpRasterPass = RasterPass::create(getDevice() /*mpScene*/, "Samples/Caustics/Caustics.ps.hlsl", "vsMain", "psMain");
     mpGPass = RasterPass::create(getDevice() /*mpScene*/, "Samples/Caustics/GPass.ps.hlsl", "vsMain", "gpassPS");
     mpGPass->getProgram()->setTypeConformances(typeConformances);
-    mpCompositePass = FullScreenPass::create(getDevice(), "Samples/Caustics/Composite.ps.hlsl", mpScene->getSceneDefines());
+    mpCompositePass = FullScreenPass::create(getDevice(), "Samples/Caustics/Composite.ps.hlsl", sceneDefines);
     //
 
+    // Samplers
     Sampler::Desc samplerDesc;
     samplerDesc.setFilterMode(TextureFilteringMode::Linear, TextureFilteringMode::Linear, TextureFilteringMode::Linear);
     samplerDesc.setAddressingMode(TextureAddressingMode::Border, TextureAddressingMode::Border, TextureAddressingMode::Border);
     mpLinearSampler = getDevice()->createSampler(samplerDesc);
+
     samplerDesc.setFilterMode(TextureFilteringMode::Point, TextureFilteringMode::Point, TextureFilteringMode::Point);
     mpPointSampler = getDevice()->createSampler(samplerDesc);
 }
