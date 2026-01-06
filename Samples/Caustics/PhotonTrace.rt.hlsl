@@ -44,7 +44,7 @@ Texture2D gUniformNoise;
 Texture2D gPhotonTexture;
 RWTexture2D<uint> gSmallPhotonBuffer;
 
-/*shared*/ cbuffer PerFrameCB
+cbuffer PerFrameCB
 {
     float4x4 invView;
 
@@ -229,10 +229,9 @@ void primaryMiss(inout CausticsPackedPayload hitData)
     hitData.hitT = 0.0f;
 }
 
-VertexOut getVertexAttributes(
-    const GeometryInstanceID instanceID,
-    uint triangleIndex, BuiltInTriangleIntersectionAttributes attribs,
-    out float3 dP1, out float3 dP2, out float3 dN1, out float3 dN2)
+VertexOut getVertexAttributes(const GeometryInstanceID instanceID, uint triangleIndex, BuiltInTriangleIntersectionAttributes attribs,
+    out float3 dP1, out float3 dP2,
+    out float3 dN1, out float3 dN2)
 {
     float3 barycentrics = float3(1.0 - attribs.barycentrics.x - attribs.barycentrics.y, attribs.barycentrics.x, attribs.barycentrics.y);
     uint3 indices = gScene.getIndices(instanceID, triangleIndex);
@@ -260,7 +259,7 @@ VertexOut getVertexAttributes(
 
         v.texC += svd.texCrd * barycentrics[i]; //asfloat(gTexCrds.Load2(address)) * barycentrics[i];
         v.normalW += N[i] * barycentrics[i];
-        v.bitangentW += asfloat(gBitangents.Load3(address)) * barycentrics[i];
+        v.bitangentW += asfloat(gBitangents.Load3(address)) * barycentrics[i]; //!!!
         //v.lightmapC += asfloat(gLightMapUVs.Load2(address)) * barycentrics[i];
 
 #ifdef USE_INTERPOLATED_POSITION

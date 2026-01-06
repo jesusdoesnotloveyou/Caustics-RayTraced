@@ -30,8 +30,13 @@ import Scene.Scene;
 import Scene.Raytracing;
 import Scene.Raster;
 import Scene.Material.MaterialSystem;
+
+import Rendering.Materials.StandardMaterial;
+import Rendering.Materials.ClothMaterial;
+import Rendering.Materials.HairMaterial;
 import Rendering.Lights.LightHelpers;
 import Utils.Math.MathHelpers;
+
 import Utils.Sampling.TinyUniformSampleGenerator;
 
 RWTexture2D<float4> gOutput;
@@ -144,8 +149,9 @@ void primaryClosestHit(inout PrimaryRayData hitData, in BuiltInTriangleIntersect
     
     uint3 launchIndex = DispatchRaysIndex();
     TinyUniformSampleGenerator sg = TinyUniformSampleGenerator(launchIndex.xy, sampleIndex);
-    [unroll]
-    for (int i = 0; i < gScene.getLightCount(); i++)
+    //[unroll]
+    [loop]
+    for (uint i = 0; i < gScene.getLightCount(); i++)
     {
         AnalyticLightSample ls;
         if (evalLightApproximate(sd.posW, gScene.getLight(i), ls))
@@ -173,25 +179,20 @@ void primaryClosestHit(inout PrimaryRayData hitData, in BuiltInTriangleIntersect
 void rayGen()
 {
     uint3 launchIndex = DispatchRaysIndex();
-    //uint randSeed = rand_init(launchIndex.x + launchIndex.y * viewportDims.x, sampleIndex, 16);
-
     TinyUniformSampleGenerator sg = TinyUniformSampleGenerator(launchIndex.xy, sampleIndex);
     
     RayDesc ray;
     if (!useDOF)
     {
-        //ray = generateRay(gCamera, launchIndex.xy, viewportDims);
         ray = gScene.camera.computeRayPinhole(launchIndex.xy, viewportDims).toRayDesc();
     }
     else
     {
         float2 u = sampleNext2D(sg);
-        //ray = generateDOFRay(gCamera, launchIndex.xy, viewportDims, randSeed);
-        //ray = gScene.camera.computeRayPinhole(pixel, viewportDims, u).toRayDesc();
-        ray = gScene.camera.computeRayPinhole(launchIndex.xy, viewportDims, true).toRayDesc();
+        ray = gScene.camera.computeRayThinlens(launchIndex.xy, viewportDims, u).toRayDesc();
     }
     PrimaryRayData hitData;
     hitData.depth = 0;
-    TraceRay(gScene.rtAccel, 0 /*rayFlags*/, 0xFF, 0 /* ray index*/, rayTypeCount /*hitProgramCount*/, 0, ray, hitData);
+    TraceRay(gScene.rtAccel, 0 /*rayFlags*/, 0xFF, 0 /* ray index*/, rayTypeCount, 0, ray, hitData);
     gOutput[launchIndex.xy] = hitData.color;
 }

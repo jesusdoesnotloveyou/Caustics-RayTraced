@@ -234,10 +234,6 @@ void primaryClosestHit(inout HitData hitData, in BuiltInTriangleIntersectionAttr
                     color += mi.eval(sd, ls.dir, sg) * ls.Li; // .color.xyz;
                 }
             }
-            //if (checkLightHit(i, posW) == false)
-            //{
-            //    color += evalMaterial(sd, gLights[i], 1).color.xyz;
-            //}
         }
 
         hitData.throughput = 0;
@@ -252,18 +248,15 @@ void primaryClosestHit(inout HitData hitData, in BuiltInTriangleIntersectionAttr
 void rayGen()
 {
     uint3 launchIndex = DispatchRaysIndex();
-    //uint randSeed = rand_init(launchIndex.x + launchIndex.y * viewportDims.x, sampleIndex, 16);
     TinyUniformSampleGenerator sg = TinyUniformSampleGenerator(launchIndex.xy, sampleIndex);
-    RayDesc ray;
 
+    RayDesc ray;
     if (!useDOF)
     {
-        //ray = generateRay(gCamera, launchIndex.xy, viewportDims);
         ray = gScene.camera.computeRayPinhole(launchIndex.xy, viewportDims).toRayDesc();
     }
     else
     {
-        //ray = generateDOFRay(gCamera, launchIndex.xy, viewportDims, randSeed);
         float2 u = sampleNext2D(sg);
         ray = gScene.camera.computeRayThinlens(launchIndex.xy, viewportDims, u).toRayDesc();
     }
@@ -273,7 +266,7 @@ void rayGen()
     for (int i = 0; i < maxDepth && any(totalThroughput > 0); i++)
     {
         HitData hitData;
-        TraceRay(gScene.rtAccel, 0, 0xFF, 0, /*hitProgramCount*/rayTypeCount, 0, ray, hitData);
+        TraceRay(gScene.rtAccel, 0 /*rayFlags*/, 0xFF, 0 /* ray index*/, rayTypeCount, 0, ray, hitData);
 
         totalColor += totalThroughput * hitData.color.rgb;
         totalThroughput *= hitData.throughput;

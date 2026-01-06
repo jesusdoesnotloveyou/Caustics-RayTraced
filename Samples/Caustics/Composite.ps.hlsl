@@ -27,7 +27,6 @@
 ***************************************************************************/
 
 import Scene.Raster;
-//import Scene.Shading;
 //import Scene.ShadingData;
 //import Scene.Lights.LightData;
 import Utils.Sampling.TinyUniformSampleGenerator;
@@ -114,7 +113,7 @@ float4 psMain( /*VSOut vsOut*/float2 texC : TEXCOORD, uint triangleIndex : SV_Pr
         float4 viewPnt = mul(screenPnt, gInvPMat);
         viewPnt /= viewPnt.w;
         float viewDepth = (gInvPMat[2][2] * depth + gInvPMat[3][2]) / (gInvPMat[2][3] * depth + gInvPMat[3][3]);
-        color = float4(abs(viewDepth.xxx) * 0.01, 1);
+        color = float4(abs(viewDepth.xxx) * 0.01f, 1.0f);
     }
     else if (gDebugMode == ShowNormal)
         color = normalVal;
@@ -123,7 +122,7 @@ float4 psMain( /*VSOut vsOut*/float2 texC : TEXCOORD, uint triangleIndex : SV_Pr
     else if (gDebugMode == ShowSpecular)
         color = gSpecularTex.Sample(gPointSampler, texC);
     else if (gDebugMode == ShowWorld)
-        color = frac(worldPnt * 0.01 + 0.01);
+        color = frac(worldPnt * 0.01f + 0.01f);
     else if (gDebugMode == ShowRoughness)
         color = diffuseVal.a;
     else if (gDebugMode == ShowRayTex)
@@ -136,9 +135,9 @@ float4 psMain( /*VSOut vsOut*/float2 texC : TEXCOORD, uint triangleIndex : SV_Pr
         //color /= color.w;
         //color.r /= gMaxPixelArea;
         if (v.r <= gMaxPixelArea)
-            color = float4(v.rgb / gMaxPixelArea, 1);
+            color = float4(v.rgb / gMaxPixelArea, 1.0f);
         else
-            color = float4(1, 0, 1, 1);
+            color = float4(1.0f, 0.0f, 1.0f, 1.0f);
     }
     else if (gDebugMode == ShowRayCountMipTex)
     {
@@ -150,9 +149,9 @@ float4 psMain( /*VSOut vsOut*/float2 texC : TEXCOORD, uint triangleIndex : SV_Pr
             uint4 v = gRayCountQuadTree[offset]; // .Load(int3(texelPos, gRayCountMip));
             uint sum = v.a;
             if (sum <= gMaxPixelArea)
-                color = float4(sum / gMaxPixelArea, 1);
+                color = float4((sum / gMaxPixelArea).xxx, 1.0f);
             else
-                color = float4(1, 0, 1, 1);
+                color = float4(1.0f, 0.0f, 1.0f, 1.0f);
         }
     }
     else if (gDebugMode == ShowRayTracing)
