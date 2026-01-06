@@ -198,8 +198,8 @@ private:
         ShowSmallPhotonCount = 17,
     };
     Display mDebugMode = ShowRayTracing;
-    float mMaxPixelArea = 100;
-    float mMaxPhotonCount = 1000000;
+    float mMaxPixelArea = 100.0f;
+    float mMaxPhotonCount = 1000000.0f;
     int mRayCountMipIdx = 5;
     int mRayTexScaleFactor = 4;
     float mUVKernel = 0.7f;
@@ -226,7 +226,7 @@ private:
 
     // Clear draw argument
     ref<Program> mpDrawArgumentProgram;     // ComputeProgram
-    ref<ProgramVars> mpDrawArgumentVars;    // ref<ProgramVars>
+    ref<ProgramVars> mpDrawArgumentVars;    // ComputeVars
     ref<ComputeState> mpDrawArgumentState;
     ref<Buffer> mpDrawArgumentBuffer;       //StructuredBuffer
 
@@ -246,9 +246,9 @@ private:
     // photon trace
     struct PhotonTraceShader
     {
-        ref<Program> mpPhotonTraceProgram;
-        ref<RtProgramVars> mpPhotonTraceVars;
-        ref<RtStateObject> mpPhotonTraceState;
+        ref<Program> mpPhotonTraceProgram; // RtProgram
+        ref<RtProgramVars> mpPhotonTraceVars; 
+        ref<RtStateObject> mpPhotonTraceState; // Probably redundant in new Falcor and not what I expect
     };
     enum PhotonTraceMacro
     {
@@ -262,29 +262,29 @@ private:
 
     // update ray density result
     ref<Program> mpUpdateRayDensityProgram;  // ComputeProgram
-    ref<ProgramVars> mpUpdateRayDensityVars; // ref<ProgramVars>
+    ref<ProgramVars> mpUpdateRayDensityVars; // ComputeVars
     ref<ComputeState> mpUpdateRayDensityState;
 
     // analyse trace result
     ref<Program> mpAnalyseProgram;      // ComputeProgram
-    ref<ProgramVars> mpAnalyseVars;     // ref<ProgramVars>
+    ref<ProgramVars> mpAnalyseVars;     // ComputeVars
     ref<ComputeState> mpAnalyseState;
     ref<Buffer> mpRayArgumentBuffer;    // StructuredBuffer
 
     // generate ray count
     ref<Program> mpGenerateRayCountProgram;     // ComputeProgram
-    ref<ProgramVars> mpGenerateRayCountVars;    // ref<ProgramVars>
+    ref<ProgramVars> mpGenerateRayCountVars;    // ComputeVars
     ref<ComputeState> mpGenerateRayCountState;
     ref<Buffer> mpRayCountQuadTree;             // StructuredBuffer
 
     // generate ray count mipmap
     ref<Program> mpGenerateRayCountMipProgram;  // ComputeProgram
-    ref<ProgramVars> mpGenerateRayCountMipVars; // ref<ProgramVars>
+    ref<ProgramVars> mpGenerateRayCountMipVars; // ComputeVars
     ref<ComputeState> mpGenerateRayCountMipState;
 
     // smooth photon
     ref<Program> mpSmoothProgram;    // ComputeProgram
-    ref<ProgramVars> mpSmoothVars;   // ref<ProgramVars>
+    ref<ProgramVars> mpSmoothVars;   // ComputeVars
     ref<ComputeState> mpSmoothState;
 
     // photon scatter
@@ -299,11 +299,11 @@ private:
     // photon gather
 #define GATHER_PROCESSING_SHADER_COUNT 4
     ref<Program> mpAllocateTileProgram[GATHER_PROCESSING_SHADER_COUNT];     // ComputeProgram
-    ref<ProgramVars> mpAllocateTileVars[GATHER_PROCESSING_SHADER_COUNT];    // ref<ProgramVars>
+    ref<ProgramVars> mpAllocateTileVars[GATHER_PROCESSING_SHADER_COUNT];    // ComputeVars
     ref<ComputeState> mpAllocateTileState[GATHER_PROCESSING_SHADER_COUNT];
 
     ref<Program> mpPhotonGatherProgram;   // ComputeProgram
-    ref<ProgramVars> mpPhotonGatherVars;  // ref<ProgramVars>
+    ref<ProgramVars> mpPhotonGatherVars;  // ComputeVars
     ref<ComputeState> mpPhotonGatherState;
 
     ref<Buffer> mpTileIDInfoBuffer;       // StructuredBuffer
@@ -312,18 +312,18 @@ private:
 
     // temporal filter
     ref<Program> mpFilterProgram;         // ComputeProgram
-    ref<ProgramVars> mpFilterVars;        // ref<ProgramVars>
+    ref<ProgramVars> mpFilterVars;        // ComputeVars
     ref<ComputeState> mpFilterState;
 
     // spacial filter
     ref<Program> mpSpacialFilterProgram;  // ComputeProgram
-    ref<ProgramVars> mpSpacialFilterVars; // ref<ProgramVars>
+    ref<ProgramVars> mpSpacialFilterVars; // ComputeVars
     ref<ComputeState> mpSpacialFilterState;
 
     // raytrace
     ref<Program> mpRaytraceProgram; // RtProgram
     ref<RtProgramVars> mpRtVars;
-    ref<RtStateObject> mpRtState;
+    ref<RtStateObject> mpRtState; // Probably redundant in new Falcor and not what I expect
     //RtSceneRenderer::SharedPtr mpRtRenderer; // it seems like there is no more RtSceneRenderer class at all
     ref<Texture> mpRtOut;
 
@@ -335,7 +335,7 @@ private:
     // RT composite pass
     ref<Program> mpCompositeRTProgram;      //RtProgram
     ref<RtProgramVars> mpCompositeRTVars;
-    ref<RtStateObject> mpCompositeRTState;
+    ref<RtStateObject> mpCompositeRTState; // Probably redundant in new Falcor and not what I expect
 
     // Caustics map
     ref<Buffer> mpPhotonBuffer;     // StructuredBuffer
