@@ -30,14 +30,13 @@ import Scene.Scene;
 import Scene.Raytracing;
 import Scene.Raster;
 import Scene.Material.MaterialSystem;
-
-import Rendering.Materials.StandardMaterial;
-import Rendering.Materials.ClothMaterial;
-import Rendering.Materials.HairMaterial;
 import Rendering.Lights.LightHelpers;
 import Utils.Math.MathHelpers;
-
 import Utils.Sampling.TinyUniformSampleGenerator;
+
+//__exported import Rendering.Materials.StandardMaterial;
+//__exported import Rendering.Materials.ClothMaterial;
+//__exported import Rendering.Materials.HairMaterial;
 
 RWTexture2D<float4> gOutput;
 
@@ -95,7 +94,7 @@ bool checkLightHit(uint lightIndex, float3 origin)
     
     ShadowRayData rayData;
     rayData.hit = true;
-    TraceRay(gScene.rtAccel, RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, 1 /* ray index */, rayTypeCount /*hitProgramCount*/, 1, ray, rayData);
+    TraceRay(gScene.rtAccel, RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, 1 /* ray index */, rayTypeCount, 1, ray, rayData);
     return rayData.hit;
 }
 
@@ -105,13 +104,14 @@ float3 getReflectionColor(float3 worldOrigin, VSOut v, float3 worldRayDir, uint 
     if (hitDepth == 0)
     {
         PrimaryRayData secondaryRay;
-        secondaryRay.depth.r = 1;
+        secondaryRay.depth = 1;
+        
         RayDesc ray;
         ray.Origin = worldOrigin;
         ray.Direction = reflect(worldRayDir, v.normalW);
         ray.TMin = 0.001f;
         ray.TMax = 100000.0f;
-        TraceRay(gScene.rtAccel, 0 /*rayFlags*/, 0xFF, 0 /* ray index*/, rayTypeCount /*hitProgramCount*/, 0, ray, secondaryRay);
+        TraceRay(gScene.rtAccel, 0 /*rayFlags*/, 0xFF, 0 /* ray index*/, rayTypeCount, 0, ray, secondaryRay);
         reflectColor = secondaryRay.hitT == -1 ? 0 : secondaryRay.color.rgb;
         float falloff = max(1, (secondaryRay.hitT * secondaryRay.hitT));
         reflectColor *= 20 / falloff;
@@ -129,14 +129,13 @@ void primaryClosestHit(inout PrimaryRayData hitData, in BuiltInTriangleIntersect
     uint triangleIndex = PrimitiveIndex();
 
     float3 posW = rayOrigW + hitT * rayDirW;
+    
     // prepare the shading data
-    const GeometryInstanceID instanceID = getGeometryInstanceID();
-
-    //VSOut v = getVertexAttributes(triangleIndex, attribs);
+    GeometryInstanceID instanceID = getGeometryInstanceID();
     VertexData v = getVertexData(instanceID, triangleIndex, attribs);
     const uint materialID = gScene.getMaterialID(instanceID);
-    let lod = ExplicitLodTextureSampler(0.0f);
-    ShadingData sd = gScene.materials.prepareShadingData(v, materialID, rayOrigW /*viewDir should be*/);
+    let lod = ExplicitLodTextureSampler(0.f);
+    ShadingData sd = gScene.materials.prepareShadingData(v, materialID, rayOrigW/*, lod*/);
 
     // Shoot a reflection ray
     float3 reflectColor = 0.0f.rrr; // getReflectionColor(posW, v, rayDirW, hitData.depth.r);

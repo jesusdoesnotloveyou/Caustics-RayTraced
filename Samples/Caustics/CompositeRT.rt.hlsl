@@ -84,9 +84,9 @@ void shadowAnyHit(inout ShadowRayData hitData, in BuiltInTriangleIntersectionAtt
 [shader("miss")]
 void primaryMiss(inout HitData hitData)
 {
-    hitData.color = 0; // float4(0.38f, 0.52f, 0.10f, 1);
-    hitData.hitT = -1;
-    hitData.throughput = 0;
+    hitData.color = 0.0f.xxx; // float4(0.38f, 0.52f, 0.10f, 1);
+    hitData.hitT = -1.0f;
+    hitData.throughput = 0.0f.xxx;
 }
 
 bool checkLightHit(uint lightIndex, float3 origin)
@@ -100,7 +100,7 @@ bool checkLightHit(uint lightIndex, float3 origin)
 
     ShadowRayData rayData;
     rayData.hit = true;
-    TraceRay(gScene.rtAccel, RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, 1 /* ray index */, /*hitProgramCount*/rayTypeCount, 1, ray, rayData);
+    TraceRay(gScene.rtAccel, RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH, 0xFF, 1 /* ray index */, rayTypeCount, 1, ray, rayData);
     return rayData.hit;
 }
 
@@ -152,7 +152,8 @@ void primaryClosestHit(inout HitData hitData, in BuiltInTriangleIntersectionAttr
     
     if (bsdfProperties.roughness > roughThreshold || /*sd.opacity < 1*/bsdfProperties.isTransmissive)
     {
-        bool isReflect = (sd.opacity == 1);
+        //bool isReflect = (sd.opacity == 1);
+        bool isReflect = !bsdfProperties.isTransmissive;
         float3 R;
         float eta = iorOverride > 0 ? 1.0 / iorOverride : 1.0 / sd.IoR;
         float3 N = v.normalW;
@@ -183,7 +184,7 @@ void primaryClosestHit(inout HitData hitData, in BuiltInTriangleIntersectionAttr
     }
     else
     {
-        float4 posS = mul(float4(posW, 1), gScene.camera./*data.viewProjMat*/getViewProj());
+        float4 posS = mul(float4(posW, 1.0f), gScene.camera./*data.viewProjMat*/getViewProj());
         posS /= posS.w;
         if (all(posS.xy < 1))
         {
@@ -223,8 +224,9 @@ void primaryClosestHit(inout HitData hitData, in BuiltInTriangleIntersectionAttr
 
         uint3 launchIndex = DispatchRaysIndex();
         TinyUniformSampleGenerator sg = TinyUniformSampleGenerator(launchIndex.xy, sampleIndex);
-        [unroll]
-        for (int i = 0; i < gScene.getLightsCount()/*gLightsCount*/; i++)
+        //[unroll]
+        [loop]
+        for (int i = 0; i < gScene.getLightCount(); i++)
         {
             AnalyticLightSample ls;
             if (evalLightApproximate(sd.posW, gScene.getLight(i), ls))
@@ -236,7 +238,7 @@ void primaryClosestHit(inout HitData hitData, in BuiltInTriangleIntersectionAttr
             }
         }
 
-        hitData.throughput = 0;
+        hitData.throughput = 0.0f.xxx;
     }
 
     hitData.color.rgb = color;

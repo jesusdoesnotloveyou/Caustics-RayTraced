@@ -27,7 +27,7 @@
 ***************************************************************************/
 #include "Common.hlsl"
 
-/*shared*/ cbuffer PerFrameCB
+cbuffer PerFrameCB
 {
     float4x4 reprojMatrix;
     float4x4 invProjMatThis;

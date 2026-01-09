@@ -36,7 +36,7 @@
 //    uint startInstanceLocation;
 //};
 
-/*shared*/ cbuffer PerFrameCB
+cbuffer PerFrameCB
 {
     uint2 coarseDim;
     uint initRayCount;

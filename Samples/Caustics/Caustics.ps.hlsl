@@ -25,11 +25,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***************************************************************************/
-//__import ShaderCommon;
 
 import Scene.Raster;
 import Utils.Sampling.TinyUniformSampleGenerator;
 import Rendering.Lights.LightHelpers;
+import Scene.Material.MaterialSystem;
 
 VSOut vsMain(VSIn vIn)
 {
@@ -38,15 +38,16 @@ VSOut vsMain(VSIn vIn)
 
 float4 psMain(VSOut vOut, uint triangleIndex : SV_PrimitiveID) : SV_TARGET
 {
-    let lod = ImplicitLodTextureSampler();
     float3 viewDir = normalize(gScene.camera.getPosition() - vOut.posW);
+    let lod = ImplicitLodTextureSampler();
     
-    ShadingData sd = prepareShadingData(vOut, triangleIndex, viewDir);
+    ShadingData sd = prepareShadingData(vOut, triangleIndex, viewDir/*, lod*/);
     float4 color = float4(0.0f, 0.0f, 0.0f, 1.0f);
 
+    uint hints = 0u;
     // Create BSDF instance and query its properties.
-    let bsdf = gScene.materials.getBSDF(sd, lod);
-    let bsdfProperties = bsdf.getProperties(sd);
+    let mi = gScene.materials.getMaterialInstance(sd, lod, hints);
+    BSDFProperties bsdfProperties = mi.getProperties(sd);
 
     const uint2 pixel = vOut.posH.xy;
     TinyUniformSampleGenerator sg = TinyUniformSampleGenerator(pixel, /*gFrameCount*/0);
@@ -56,10 +57,8 @@ float4 psMain(VSOut vOut, uint triangleIndex : SV_PrimitiveID) : SV_TARGET
     {
         AnalyticLightSample ls;
         evalLightApproximate(sd.posW, gScene.getLight(i), ls);
-        //color += evalMaterial(sd, gLights[i], 1).color;
-        color.rgb += bsdf.eval(sd, ls.dir, sg) * ls.Li;
+        color.rgb += mi.eval(sd, ls.dir, sg) * ls.Li;
     }
-    //color.rgb += sd.emissive;
     color.rgb += bsdfProperties.emission;
     return color;
 }

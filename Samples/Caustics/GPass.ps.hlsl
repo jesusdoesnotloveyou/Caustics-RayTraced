@@ -33,6 +33,7 @@ import Utils.Sampling.TinyUniformSampleGenerator;
 import Utils.Math.MathHelpers;
 import Rendering.Lights.LightHelpers;
 import Rendering.Materials.TexLODHelpers;
+import Scene.Material.MaterialSystem;
 
 struct GPassPsOut
 {
@@ -48,10 +49,9 @@ VSOut vsMain(VSIn vIn)
 
 GPassPsOut gpassPS(VSOut vOut, uint triangleIndex : SV_PrimitiveID) : SV_TARGET
 {
-    let lod = ImplicitLodTextureSampler();
     float3 viewDir = normalize(gScene.camera.getPosition() - vOut.posW);
-    ShadingData sd = prepareShadingData(vOut, triangleIndex, viewDir/*, lod*/);
-    //ShadingData sd = prepareShadingData(vOut, gMaterial, gCamera.posW);
+    let lod = ImplicitLodTextureSampler();
+    ShadingData sd = prepareShadingData(vOut, triangleIndex, viewDir, lod);
 
     uint hints = 0u;
     // Create BSDF instance and query its properties.

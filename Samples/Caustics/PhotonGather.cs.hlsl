@@ -49,7 +49,6 @@
 //    uint startInstanceLocation;
 //};
 
-
 StructuredBuffer<Photon> gPhotonBuffer;
 StructuredBuffer<IDBlock> gTileInfo;
 ByteAddressBuffer gIDBuffer;
@@ -134,7 +133,7 @@ void main(uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID, ui
 
     float3 totalLight[NUM_GROUP_PER_TILE];
     [unroll]
-    for (/*int */i = 0; i < NUM_GROUP_PER_TILE; i++)
+    for (int i = 0; i < NUM_GROUP_PER_TILE; i++)
         totalLight[i] = 0;
 
     int threadGroupOffset = pixelTileIndex.y * BLOCK_SIZE_X + pixelTileIndex.x;
@@ -166,7 +165,7 @@ void main(uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID, ui
     }
 
     [unroll]
-    for (/*int */i = 0; i < NUM_GROUP_PER_TILE; i++)
+    for (int i = 0; i < NUM_GROUP_PER_TILE; i++)
     {
         uint2 pixelLocation = pixelLocation0 + uint2(0, i * BLOCK_SIZE_Y);
         if (all(pixelLocation < screenDim))

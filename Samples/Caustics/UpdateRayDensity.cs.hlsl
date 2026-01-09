@@ -27,7 +27,7 @@
 ***************************************************************************/
 #include "Common.hlsl"
 
-/*shared*/ cbuffer PerFrameCB
+cbuffer PerFrameCB
 {
     int2 coarseDim;
     float minPhotonPixelSize;

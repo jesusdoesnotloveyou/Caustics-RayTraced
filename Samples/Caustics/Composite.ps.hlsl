@@ -27,7 +27,6 @@
 ***************************************************************************/
 
 import Scene.Raster;
-//import Scene.ShadingData;
 //import Scene.Lights.LightData;
 import Utils.Sampling.TinyUniformSampleGenerator;
 import Rendering.Lights.LightHelpers;
@@ -228,6 +227,7 @@ float4 psMain( /*VSOut vsOut*/float2 texC : TEXCOORD, uint triangleIndex : SV_Pr
     }
     else
     {
+        //!!!!!!!!!!!!!!!1
         ShadingData sd = initShadingData();
         sd.posW = worldPnt.xyz;
         sd.V = normalize(gCameraPos - sd.posW);

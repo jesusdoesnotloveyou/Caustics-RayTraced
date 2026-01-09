@@ -27,7 +27,7 @@
 ***************************************************************************/
 #include "Common.hlsl"
 
-/*shared */cbuffer PerFrameCB
+cbuffer PerFrameCB
 {
     float4x4 viewProjMat;
 
@@ -156,7 +156,7 @@ float3 medianFilter(uint2 pixelCoord0)
         luminance[i].y = i;
     }
 
-    for (/*int */i = 0; i < 9; i++)
+    for (int i = 0; i < 9; i++)
     {
         for (int j = 0; j < i; j++)
         {

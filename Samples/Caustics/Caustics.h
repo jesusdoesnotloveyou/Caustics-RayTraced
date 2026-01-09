@@ -217,7 +217,7 @@ private:
 
     ref<Scene> mpQuad;
     ref<Scene> mpSphere;
-    ref<Scene> mpScene; // RtScene
+    ref<Scene> mpScene;
     ref<Camera> mpCamera;
     std::unique_ptr<FirstPersonCameraController> mCamController;
 
