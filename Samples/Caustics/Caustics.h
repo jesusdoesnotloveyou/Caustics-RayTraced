@@ -26,9 +26,9 @@
  # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **************************************************************************/
 #pragma once
+
 #include "Falcor.h"
 #include "Core/SampleApp.h"
-
 #include <Core/Pass/RasterPass.h>
 #include <Core/Pass/FullScreenPass.h>
 
@@ -40,8 +40,8 @@ using namespace Falcor;
 class Caustics : public SampleApp
 {
 public:
-    Caustics(const SampleAppConfig& config);
-    ~Caustics();
+    Caustics(const SampleAppConfig& config) : SampleApp(config) {}
+    ~Caustics() noexcept = default;
 
     void onLoad(RenderContext* pRenderContext) override;
     void onShutdown() override;
@@ -243,13 +243,15 @@ private:
     GBuffer mGBuffer[2];
     ref<Texture> mpSmallPhotonTex;
 
-    // photon trace
-    struct PhotonTraceShader
+    struct Raytracer
     {
-        ref<Program> mpPhotonTraceProgram; // RtProgram
-        ref<RtProgramVars> mpPhotonTraceVars; 
-        ref<RtStateObject> mpPhotonTraceState; // Probably redundant in new Falcor and not what I expect
+        ref<Program> pProgram;
+        ref<RtBindingTable> pBindingTable;
+        ref<RtProgramVars> pProgramVars;
     };
+
+    // photon trace
+    Raytracer mpPhotonTracer;
     enum PhotonTraceMacro
     {
         RAY_DIFFERENTIAL = 0,
@@ -257,7 +259,7 @@ private:
         RAY_NONE = 2
     };
     PhotonTraceMacro mPhotonTraceMacro = RAY_DIFFERENTIAL;
-    std::unordered_map<uint32_t, PhotonTraceShader> mPhotonTraceShaderList;
+    std::unordered_map<uint32_t, Raytracer> mPhotonTraceShaderList;
     ref<Texture> mpUniformNoise;
 
     // update ray density result
@@ -321,10 +323,7 @@ private:
     ref<ComputeState> mpSpacialFilterState;
 
     // raytrace
-    ref<Program> mpRaytraceProgram; // RtProgram
-    ref<RtProgramVars> mpRtVars;
-    ref<RtStateObject> mpRtState; // Probably redundant in new Falcor and not what I expect
-    //RtSceneRenderer::SharedPtr mpRtRenderer; // it seems like there is no more RtSceneRenderer class at all
+    Raytracer mpCausticsTracer;
     ref<Texture> mpRtOut;
 
     // composite pass
@@ -333,9 +332,7 @@ private:
     ref<Texture> mpPhotonCountTex;
 
     // RT composite pass
-    ref<Program> mpCompositeRTProgram;      //RtProgram
-    ref<RtProgramVars> mpCompositeRTVars;
-    ref<RtStateObject> mpCompositeRTState; // Probably redundant in new Falcor and not what I expect
+    Raytracer mpCompositeTracer;
 
     // Caustics map
     ref<Buffer> mpPhotonBuffer;     // StructuredBuffer
@@ -352,10 +349,10 @@ private:
     void renderRaster(RenderContext* pRenderContext, const ref<Fbo>& pTargetFbo);
 
     void loadShader();
-    PhotonTraceShader getPhotonTraceShader();
+    Raytracer getPhotonTraceShader();
 
     void setCommonVars(ProgramVars* pVars, const Fbo* pTargetFbo); //GraphicsVars
-    void setPhotonTracingCommonVariable(PhotonTraceShader& shader);
+    void setPhotonTracingCommonVariable(Raytracer& photonTracer);
 
     void loadSceneSetting(std::string path);
     void saveSceneSetting(std::string path);
