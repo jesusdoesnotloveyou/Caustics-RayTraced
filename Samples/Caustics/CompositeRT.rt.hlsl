@@ -36,10 +36,11 @@ SamplerState gPointSampler;
 
 import Scene.Scene;
 import Scene.Raytracing;
+import Scene.Material.MaterialSystem;
 import Utils.Sampling.TinyUniformSampleGenerator;
 import Rendering.Lights.LightHelpers;
 
-/*shared*/ cbuffer PerFrameCB
+cbuffer PerFrameCB
 {
     float4x4 invView;
     float4x4 invProj;

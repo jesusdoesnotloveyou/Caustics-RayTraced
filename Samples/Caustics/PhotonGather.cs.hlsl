@@ -27,7 +27,7 @@
 ***************************************************************************/
 #include "Common.hlsl"
 
-/*shared*/ cbuffer PerFrameCB
+cbuffer PerFrameCB
 {
     float4x4 gInvViewProjMat;
     int2 screenDim;
@@ -42,11 +42,11 @@
 
 //struct DrawArguments
 //{
-//    uint indexCountPerInstance;
-//    uint instanceCount;
-//    uint startIndexLocation;
-//    int baseVertexLocation;
-//    uint startInstanceLocation;
+//    uint IndexCountPerInstance;
+//    uint InstanceCount;
+//    uint StartIndexLocation;
+//    int BaseVertexLocation;
+//    uint StartInstanceLocation;
 //};
 
 StructuredBuffer<Photon> gPhotonBuffer;

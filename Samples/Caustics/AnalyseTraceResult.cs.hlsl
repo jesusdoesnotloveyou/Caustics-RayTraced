@@ -43,11 +43,11 @@ cbuffer PerFrameCB
 
 //struct DrawArguments
 //{
-//    uint indexCountPerInstance;
-//    uint instanceCount;
-//    uint startIndexLocation;
-//    int baseVertexLocation;
-//    uint startInstanceLocation;
+//    uint IndexCountPerInstance;
+//    uint InstanceCount;
+//    uint StartIndexLocation;
+//    int BaseVertexLocation;
+//    uint StartInstanceLocation;
 //};
 
 RWStructuredBuffer<Photon> gPhotonBuffer;

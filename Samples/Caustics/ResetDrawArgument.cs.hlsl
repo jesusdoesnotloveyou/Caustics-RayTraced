@@ -29,11 +29,11 @@
 
 //struct DrawArguments
 //{
-//    uint indexCountPerInstance;
-//    uint instanceCount;
-//    uint startIndexLocation;
-//    int baseVertexLocation;
-//    uint startInstanceLocation;
+//    uint IndexCountPerInstance;
+//    uint InstanceCount;
+//    uint StartIndexLocation;
+//    int BaseVertexLocation;
+//    uint StartInstanceLocation;
 //};
 
 cbuffer PerFrameCB
@@ -60,10 +60,10 @@ void main(uint3 threadIdx : SV_DispatchThreadID)
     {
         gPhotonCountTexture[textureOffset] = gDrawArgument[0].InstanceCount;
 
-        gDrawArgument[0].VertexCountPerInstance = scatterGeoIdxCount; // 12;//6
+        gDrawArgument[0].IndexCountPerInstance = scatterGeoIdxCount; // 12;//6
         gDrawArgument[0].InstanceCount = 0;
-        //gDrawArgument[0].StartIndexLocation = 0;
-        gDrawArgument[0].StartVertexLocation = 0;
+        //gDrawArgument[0].StartVertexLocation = 0;
+        gDrawArgument[0].StartIndexLocation = 0;
         gDrawArgument[0].StartInstanceLocation = 0;
 
         //gRayArgument[0].rayTaskCount = initRayCount;

@@ -29,6 +29,7 @@
 
 import Scene.Scene;
 import Scene.Raytracing;
+import Scene.Material.MaterialSystem;
 import Rendering.Lights.LightHelpers;
 
 RWStructuredBuffer<Photon> gPhotonBuffer;
