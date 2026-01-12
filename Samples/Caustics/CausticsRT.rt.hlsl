@@ -34,10 +34,6 @@ import Rendering.Lights.LightHelpers;
 import Utils.Math.MathHelpers;
 import Utils.Sampling.TinyUniformSampleGenerator;
 
-//__exported import Rendering.Materials.StandardMaterial;
-//__exported import Rendering.Materials.ClothMaterial;
-//__exported import Rendering.Materials.HairMaterial;
-
 RWTexture2D<float4> gOutput;
 
 cbuffer PerFrameCB
